@@ -3,9 +3,15 @@
 
 class Monster : public Character {
 public:
-    Monster(string name = "고블린", int maxHp = 5, int attack = 2, int defence = 1, int dropExp = 1);
+    static const string DEFAULT_NAME;
+    static const int DEFAULT_HP = 5;
+    static const int DEFAULT_ATTACK = 2;
+    static const int DEFAULT_DEFENCE = 1;
+    static const int DEFAULT_EXP = 1;
 
-    void SetData(string name, int maxHp, int attack, int defence, int dropExp);
+    Monster();
+
+    void SetData();
 
     // Character을(를) 통해 상속됨
     virtual void ShowInfo() override;
@@ -18,4 +24,7 @@ private:
 
     // Character을(를) 통해 상속됨
     virtual void TurnEnd() override {};
+
+    // Character을(를) 통해 상속됨
+    virtual int Attacked(int attack) override;
 };

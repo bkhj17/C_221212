@@ -1,15 +1,23 @@
 #include "Monster.h"
 #include <iostream>
+#include "UsefulFunc.h"
 
-Monster::Monster(string name, int maxHp, int attack, int defence, int dropExp)
-	: Character(name, maxHp, attack, defence), dropExp(dropExp)
+const string Monster::DEFAULT_NAME = string("°íºí¸°");
+
+Monster::Monster()
 {
+	SetData();
 }
 
-void Monster::SetData(string name, int maxHp, int attack, int defence, int dropExp)
+void Monster::SetData()
 {
-	Character::SetData(name, maxHp, attack, defence);
-	this->dropExp = dropExp;
+	Character::SetData(Monster::DEFAULT_NAME,
+		MakeRandByRange(Monster::DEFAULT_HP - 1, Monster::DEFAULT_HP + 1), 
+		MakeRandByRange(Monster::DEFAULT_ATTACK - 1, Monster::DEFAULT_ATTACK + 1),
+		MakeRandByRange(Monster::DEFAULT_DEFENCE - 1, Monster::DEFAULT_DEFENCE + 1));
+	this->dropExp = MakeRandByRange(Monster::DEFAULT_EXP - 1, Monster::DEFAULT_EXP + 1);
+	if (this->dropExp <= 0)
+		this->dropExp = 1;
 }
 void Monster::ShowInfo()
 {
@@ -21,5 +29,10 @@ void Monster::ShowInfo()
 
 void Monster::ShowShortInfo()
 {
-	cout << name << "HP(" << curHp << "/" << maxHp << ")\n";
+	cout << name << "HP(" << curHp << "/" << maxHp << ") ATK : " << attack << " DEF : " << defence << "\n";
+}
+
+int Monster::Attacked(int attack)
+{
+	return DefaultAttacked(attack);
 }

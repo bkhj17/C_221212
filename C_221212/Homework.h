@@ -35,10 +35,14 @@ private:
     int InputEnemyNum();
     void TurnStart();
 
+    void Fight();
+    void MonsterDead(Monster* dead);
+
+
     Player* player = nullptr;
 
     int nEnemy;
-    vector<pair<bool, Monster*>> monsters;
+    vector<Monster*> monsters;
 public:
     // Base을(를) 통해 상속됨
     virtual void Run() override;

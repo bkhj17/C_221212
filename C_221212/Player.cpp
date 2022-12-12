@@ -47,7 +47,12 @@ void Player::ShowInfo()
 
 void Player::ShowShortInfo()
 {
-	cout << name << "HP(" << curHp << "/" << maxHp << ") MP(" << curMp << "/" << maxMp << ")\n";
+	cout << name 
+		<< "Lv " << level << " "
+		<< " HP(" << curHp << "/" << maxHp 
+		<< ") MP(" << curMp << "/" << maxMp 
+		<< ") ATK : " << attack 
+		<< " DEF : " << defence << "\n";
 }
 
 int Player::Attacked(int attack)
@@ -60,8 +65,17 @@ int Player::Attacked(int attack)
 		return Damaged(defence * 2 < attack ? attack - defence * 2 : 0);
 	}
 	else {
-		return this->Character::Attacked(attack);
+		return DefaultAttacked(attack);
 	}
+}
+
+int Player::ReflectSkill()
+{
+	if (curMp < 3)
+		return false;
+	reflect = true;
+	curMp -= 3;
+	return true;
 }
 
 string Player::GetData()

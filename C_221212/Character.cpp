@@ -5,7 +5,6 @@
 Character::Character(string name, int maxHp, int attack, int defence)
 	: name(name), curHp(maxHp), maxHp(maxHp), attack(attack), defence(defence)
 {
-
 }
 
 Character::~Character()
@@ -24,16 +23,17 @@ void Character::Attack(Character* enemy)
 {
 	cout << name << "은/는 " << enemy->name << "을 공격했다!\n";
 	Sleep(500);
-	int result = enemy->Damaged(attack);
+
+	int result = enemy->Attacked(attack);
 	if (result < 0) //반사
 		Damaged(attack);
 }
 
-int Character::Attacked(int attack)
+int Character::DefaultAttacked(int attack)
 {
 	int damage = (attack > defence) ? attack - defence : 1;
 	Damaged(damage);
-	return damage;
+	return 0;
 }
 
 int Character::Damaged(int damage)

@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "Monster.h"
 #include <conio.h>
+
 const string Homework::FILE_NAME = string("SaveData.txt");
 
 bool Homework::LoadData()
@@ -19,6 +20,10 @@ bool Homework::LoadData()
 	file.close();
 
 	player = new Player(name, level, exp, maxHp, maxMp, attack, defence);
+
+	player->ShowInfo();
+	cout << "계속 하려면 아무 키나 누르시오.";
+	while (!_kbhit()) {}
 
 	return player != nullptr;
 }
@@ -36,14 +41,13 @@ void Homework::NewGame() {
 	player->ShowInfo();
 	cout << "계속 하려면 아무 키나 누르시오.";
 	while (!_kbhit()) {
-
 	}
-
 }
 
 void Homework::Setting()
 {
 	int input;
+	system("cls");
 	cout << "1. 불러오기 2. 새 게임 3. 종료 -> ";
 	cin >> input;
 	switch (input) {
@@ -101,27 +105,134 @@ void Homework::SaveData()
 		return;
 	}
 
+	player->ShowInfo();
 	file << player->GetData();
 	file.close();
-}
-
-void Homework::SetMonsters(int nEnemy)
-{
-	this->nEnemy = nEnemy;
-	while (monsters.size() < nEnemy) {
-		monsters.push_back({ true, new Monster() });
+	cout << "저장 완료\n";
+	cout << "계속 하려면 아무 키나 누르시오.";
+	while (!_kbhit()) {
 	}
 
 }
 
+void Homework::SetMonsters(int numEnemy)
+{
+	nEnemy = 0;
+	for (int i = 0; i < min(monsters.size(), numEnemy); i++) {
+		monsters[i]->SetData();
+		nEnemy++;
+	}
+
+	while (nEnemy < numEnemy) {
+		monsters.push_back(new Monster);
+		monsters.back()->SetData();
+		nEnemy++;
+	}
+}
+
 void Homework::TurnStart()
 {
+	system("cls");
 	cout << "====================================\n";
 	player->ShowShortInfo();
 	for(auto monster : monsters)
-		if(monster.first)
-			monster.second->ShowShortInfo();
+		if(!monster->IsDead())
+			monster->ShowShortInfo();
 	cout << "====================================\n";
+}
+
+void Homework::Fight()
+{
+	int input = 0;
+	//플레이어 행동
+	cout << "1. 공격\n2. 방어\n3. 반사(mp 3)\n4. 도망\n-> ";
+	cin >> input;
+
+	int curEnemy = nEnemy;
+	switch (input) {
+	case 1:
+		int target;
+		cout << "타겟 선택\n";
+		for (int i = 0; i < nEnemy; i++) {
+			if (monsters[i]->IsDead())
+				cout << "X. ";
+			else
+				cout << i + 1 << ".";
+			monsters[i]->ShowShortInfo();
+		}
+
+		while (1) {
+			cin >> target;
+			target--;
+			if (target < 0 || target >= nEnemy || monsters[target]->IsDead()) {
+				cout << "잘못된 타겟입니다.\n";
+				continue;
+			}
+			break;
+		}
+
+		player->Attack(monsters[target]);
+		if (monsters[target]->IsDead()) {
+			MonsterDead(monsters[target]);
+			curEnemy--;
+		}
+		break;
+	case 2:
+		player->guard = true;
+		break;
+	case 3:
+		if (!player->ReflectSkill()) {
+			cout << "MP 부족. 다시\n";
+			Sleep(1000);
+			return;
+		}
+		break;
+	default:
+		cout << "도망쳤다...";
+		while (!_kbhit()) {}
+		break;
+	}
+
+	if (curEnemy == 0) {
+		gameState = GameState::BATTLE_END;
+		while (!_kbhit()) {}
+		return;
+	}
+
+	//몬스터 행동
+	for (int i = 0; i < nEnemy; i++) {
+		if (monsters[i]->IsDead())
+			continue;
+
+		monsters[i]->Attack(player);
+		if (player->IsDead()) {
+			cout << player->GetName() << "는 쓰러지고 말았다.\n";
+			gameState = GameState::GAME_OVER;
+			while (!_kbhit()) {}
+			return;
+		}
+
+		if (monsters[i]->IsDead()) {
+			MonsterDead(monsters[i]);
+			curEnemy--;
+		}
+	}
+
+	if (curEnemy == 0) {
+		gameState = GameState::BATTLE_END;
+		while (!_kbhit()) {}
+		return;
+	}
+
+	player->TurnEnd();
+	gameState = GameState::TURN_START;
+}
+
+void Homework::MonsterDead(Monster* dead)
+{
+	cout << dead->GetName() << "가 쓰러졌다.\n";
+	player->GainExp(dead->GetDropExp());
+	Sleep(1000);
 }
 
 void Homework::Run()
@@ -144,27 +255,30 @@ void Homework::Run()
 			break;
 		case Homework::GameState::INPUT_ENEMY_NUM:
 		{
-			int nEnemy = InputEnemyNum();
-			if (nEnemy == 0)
+			int numEnemy = InputEnemyNum();
+			if (numEnemy == 0)
 				gameState = GameState::SELECT_MENU;
 			else {
-				SetMonsters(nEnemy);
+				SetMonsters(numEnemy);
 				gameState = GameState::TURN_START;
 			}
 		}
 			break;
 		case Homework::GameState::TURN_START:
 			TurnStart();
-			gameState = GameState::SELECT_COMMAND;
-			break;
-		case Homework::GameState::SELECT_COMMAND:
+			gameState = GameState::FIGHT;
 			break;
 		case Homework::GameState::FIGHT:
+			Fight();
+
 			break;
 		case Homework::GameState::BATTLE_END:
+			cout << "전투 종료\n";
+			Sleep(1000);
+			gameState = GameState::SELECT_MENU;
 			break;
 		case Homework::GameState::GAME_OVER:
-			cout << "플레이어 사망.... Game Over" << endl;
+			cout << "플레이어 사망.... Game Over\n";
 			gameState = GameState::SETTING;
 			break;
 		case Homework::GameState::EXIT:
@@ -174,21 +288,7 @@ void Homework::Run()
 			break;
 		}
 	}
-	/*
-	while (!player->IsDead() && !monster->IsDead()) {
-
-		player->Attack(monster);
-		if (monster->IsDead()) {
-			player->GainExp(monster->GetDropExp());
-			break;
-		}
-
-		monster->Attack(player);
-		if (player->IsDead()) {
-		}
-	}
-	*/
 	for (int i = 0; i < monsters.size(); i++)
-		if(monsters[i].second) delete monsters[i].second;
+		if (monsters[i]) delete monsters[i];
 	if(player) delete player;
 }

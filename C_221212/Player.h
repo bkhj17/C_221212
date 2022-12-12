@@ -3,7 +3,7 @@
 
 class Player : public Character {
 public:
-    Player(string name, int level = 1, int exp = 0, int maxHp = 5, int maxMp = 3, int attack = 2, int defence = 1);
+    Player(string name, int level = 1, int exp = 0, int maxHp = 5, int maxMp = 3, int attack = 3, int defence = 1);
     //
     void GainExp(int expGain);
     void LevelUp();
@@ -11,11 +11,12 @@ public:
     // Character을(를) 통해 상속됨
     virtual void ShowInfo() override;
     virtual void ShowShortInfo() override;
-    int Attacked(int attack);
+    virtual int Attacked(int attack) override;
+    virtual void TurnEnd() override;
 
     bool guard = false;
-    bool reflect = false;
     
+    int ReflectSkill();
     string GetData();
 
 private:
@@ -25,8 +26,7 @@ private:
     int level = 0;
     int exp;
     int curMp, maxMp;
+    bool reflect = false;
 
-    // Character을(를) 통해 상속됨
-    virtual void TurnEnd() override;
 
 };
